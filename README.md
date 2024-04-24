@@ -1,9 +1,9 @@
 # LLMs_SDOH_Integration
 
-This repo contains our code for the paper Large Language Models for Integrating Social Determinant of Health Data: A Case Study on Heart Failure 30-Day Readmission Prediction.
+This repo contains our code for the paper _Large Language Models for Integrating Social Determinant of Health Data: A Case Study on Heart Failure 30-Day Readmission Prediction_.
 
 # Requirements
-Heart failure 30-day hospital readmission prediction:
+Heart failure 30-day hospital readmission prediction (```HF_readmission_prediction```):
 ```
 python 3.9
 imblearn==0.0
