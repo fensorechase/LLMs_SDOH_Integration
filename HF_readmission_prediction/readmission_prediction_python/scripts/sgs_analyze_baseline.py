@@ -5,19 +5,22 @@ from pymongo import MongoClient
 import urllib.parse
 
 
-
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("-output", help="output file",
-                        default="TODO: output csv file name to output results from mongo.")
-    username = urllib.parse.quote_plus('TODO: mongo username')
-    password = urllib.parse.quote_plus('TODO: mongo password')
-    parser.add_argument("-mongo_url", default = 'TODO: your mongo server url' % (username, password)) 
-    parser.add_argument("-mongo_db",
-                        default="TODO: your mongo database name.")
-    parser.add_argument("-mongo_col",
-                        default="TODO: your mongo collection name", 
-                        help="collection_type") # For subgroup results, set default="subgroups_baseline", for entire dataset, default="baseline"
+    parser.add_argument(
+        "-output",
+        help="output file",
+        default="TODO: output csv file name to output results from mongo.",
+    )
+    username = urllib.parse.quote_plus("TODO: mongo username")
+    password = urllib.parse.quote_plus("TODO: mongo password")
+    parser.add_argument(
+        "-mongo_url", default="TODO: your mongo server url" % (username, password)
+    )
+    parser.add_argument("-mongo_db", default="TODO: your mongo database name.")
+    parser.add_argument(
+        "-mongo_col", default="TODO: your mongo collection name", help="collection_type"
+    )  # For subgroup results, set default="subgroups_baseline", for entire dataset, default="baseline"
     args = parser.parse_args()
 
     # setup the mongo stuff
@@ -26,7 +29,7 @@ def main():
     mcol = mdb[args.mongo_col]
 
     pipe_list = [
-                {
+        {
             "$project": {
                 "_id": 0,
                 "model": "$model",
@@ -36,7 +39,6 @@ def main():
                 "endpoint": "$endpoint",
                 "sg_key": "$sg_key",
                 "subgroup": "$subgroup",
-
                 "auc": "$auc",
                 "aps": "$aps",
                 "precision": "$precision",
@@ -47,12 +49,10 @@ def main():
                 "tnr": "$tnr",
                 "fpr": "$fpr",
                 "mcc": "$mcc",
-                "test_samp_size": "$test_samp_size"
+                "test_samp_size": "$test_samp_size",
             }
         }
-
     ]
-
 
     tmp = list(mcol.aggregate(pipe_list))
     tmp_df = pd.DataFrame.from_records(tmp)
@@ -63,8 +63,6 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-
 
 
 """
