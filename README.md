@@ -42,6 +42,10 @@ The social determinants of health (SDOH) datasets used in this study can be foun
 | [AHRQ SDOHD](https://www.ahrq.gov/sdoh/data-analytics/sdoh-data.html) |  506 |
 
 
-
 ## LLM Experiments
 For zero-shot and 1-shot inference of SDOH Domains for AHRQ and NaNDA variables, please use the commands in `LLM_SDOH_annotation/commands` folder for experiments.
+
+
+## All Related Documents: 
+- [Zenodo\: Full list of SDOH variables used from AHRQ, NaNDA](https://zenodo.org/records/10982453?token=eyJhbGciOiJIUzUxMiIsImlhdCI6MTcxMzMwMTg5NiwiZXhwIjoxNzIyMjExMTk5fQ.eyJpZCI6ImQ2NjIxODIwLTEwODEtNDVjYi1hOWQ1LWRhOTk3YTEyM2IwYyIsImRhdGEiOnt9LCJyYW5kb20iOiI3ZGQyNWNlYWFlM2Q2YTRiMTg0NDA4NzlkNTRjMDNlMCJ9.l6PwLoblL2DG9bBvFEjFzur4hVo6BgapzpOpKNqoWQeRtOIN0KFDL1cQgvW7_KAbAde0yDDTdy_SjQlllqagZg)
+- [Instructions for NaNDA Variable Annotation](https://zenodo.org/records/11062048?token=eyJhbGciOiJIUzUxMiIsImlhdCI6MTcxMzk4ODIzNywiZXhwIjoxNzIyMjExMTk5fQ.eyJpZCI6ImU3NDA5ZTZmLTNhOWQtNGE2Zi04ZWJiLTQ2OGJhMjIzYmYyMCIsImRhdGEiOnt9LCJyYW5kb20iOiJkMjY2OWY3MGZkMThmMmNkZTg4NGI0MjVhMGZkNjNmMSJ9.8KDK2L4AIyGX9zOciVUEcT9oom-WDrZ1B-MX5RJH0I9i3Im5LbZhLtSnyS7ElXUoDqDUhgAnNKiMKMWGh7gKwQ)
