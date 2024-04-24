@@ -44,4 +44,4 @@ The social determinants of health (SDOH) datasets used in this study can be foun
 
 
 ## LLM Experiments
-For zero-shot and 1-shot inference of SDOH Domains for AHRQ and NaNDA variables, please use the commands in `commands` folder for experiments.
+For zero-shot and 1-shot inference of SDOH Domains for AHRQ and NaNDA variables, please use the commands in `LLM_SDOH_annotation/commands` folder for experiments.
