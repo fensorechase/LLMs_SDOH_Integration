@@ -1,0 +1,956 @@
+---
+title: "merge_NaNDA_and_patient_data"
+output: html_notebook
+---
+
+# Load libraries
+```{r}
+library(caret)
+library(data.table)
+library(dplyr)
+library(sets)
+library(scales)
+library(tidyr)
+library(stringr)
+library(tibble)
+library(tidygeocoder)
+library(stringi)
+
+library(readr) # For read_tsv
+```
+
+# Import raw NaNDA datasets: 
+## NOTE: All at census tract level.
+1.) National Neighborhood Data Archive (NaNDA): Broadband Internet Availability, Speed, and Adoption by Census Tract and ZIP Code Tabulation Area, United States, 2014-2020 (ICPSR 38567)
+- 38567: 2014-2020
+
+2.) National Neighborhood Data Archive (NaNDA): Education and Training Services by Census Tract, United States, 2003-2017
+- 127681: 2003 – 2017 (2003-2015, 2017)
+
+3.) National Neighborhood Data Archive (NaNDA): Internet Access by Census Tract and ZIP Code Tabulation Area, United States, 2015-2019 (ICPSR 38559)
+- 38559: 2015-2019
+
+4.) National Neighborhood Data Archive (NaNDA): Neighborhood-School Gap by Census Tract and ZIP Code Tabulation Area, United States, 2009-2010 and 2015-2016 (ICPSR 38579)
+- 38579: 2009-2010, 2015-2016
+
+5.) National Neighborhood Data Archive (NaNDA): Polluting Sites by Census Tract and ZIP Code Tabulation Area, United States, 1987-2021 (ICPSR 38597)
+- 38597: 1987-2021
+
+6.) National Neighborhood Data Archive (NaNDA): School District Characteristics and School Counts by Census Tract, ZIP Code Tabulation Area, and School District, 2000-2018 (ICPSR 38569)
+- 38569: 2000-2018
+
+7.) National Neighborhood Data Archive (NaNDA): Post Offices and Banks by Census Tract, United States, 2003-2017
+- 128281: 2003-2018
+```{r}
+
+# 1.) 
+broadband_df <- read_tsv("../NaNDA_total/NaNDA_Broadband_Internet/DS0001/38567-0001-Data.tsv")
+
+# 2.) 
+edtrain_df <- read.csv("../NaNDA_total/NaNDA_Education/nanda_edtrain_tract_2003-2017_01P.csv")
+
+# 3.) 
+internet_df <- read_tsv("../NaNDA_total/NaNDA_Internet_Access/DS0001/38559-0001-Data.tsv")
+
+# 4.) 
+schoolneigh_df <- read_tsv("../NaNDA_total/NaNDA_Neighborhood_School_Gap/DS0001/38579-0001-Data.tsv")
+
+# 5.) V1.
+polluting_df <- read_tsv("../NaNDA_total/NaNDA_Polluting_Sites/DS0001/38597-0001-Data.tsv")
+  
+# 6.) 
+schooldist_df <-read_tsv("../NaNDA_total/NaNDA_School_District_Characteristics_and_School_Counts/DS0001/38569-0001-Data.tsv")
+
+
+# 7.) CSV not TSV here.
+postbanks_df <- read.csv("../NaNDA_total/NaNDA_Post_Offices_and_Banks/nanda_pobank_tract_2003-2017_02P_csv_with_readme/nanda_pobank_tract_2003-2017_02P.csv")
+
+
+
+```
+
+# Import NaNDA data:
+- use 2 dataset that overlap with 2010-2018.
+```{r}
+# NaNDA: 16th dataset
+
+# DS0001: 2010 census
+# DS0003: 2020 census
+#pollution_d16_2010 <- read_tsv("../NaNDA_total/NaNDA_Polluting_Sites/DS0001/38597-0001-Data.tsv")
+
+# pollution_d16_2020 <- read_tsv("../NaNDA_total/NaNDA_Polluting_Sites/DS0003/38597-0003-Data.tsv")
+
+#print(colnames(pollution_d16_2020))
+
+# NaNDA: 22nd dataset
+
+# school_d22 <- read_tsv("../NaNDA_total/NaNDA_School_District_Characteristics_and_School_Counts/DS0001/38569-0001-Data.tsv")
+
+#print(colnames(school_d22))
+```
+# Pollution data: NaNDA
+Fields: 
+- TRACT_FIPS20 (11 digits): <chr>
+- YEAR: <dbl>
+- COUNT_TRI_FACILITIES: <dbl>
+```{r}
+
+# 2010-2018: with 'pollution_d16_2010'
+# min(pollution_d16_2010$YEAR)
+# max(pollution_d16_2010$YEAR)
+
+# NOTE: We use the 2020 census data which ranges from 1987 to 2021 because it is the most up to date. 
+# 1987 - 2021: with 'pollution_d16_2020'
+
+#min(pollution_d16_2020$YEAR)
+#max(pollution_d16_2020$YEAR)
+
+#min(school_d22$YEAR)
+# max(school_d22$YEAR)
+
+```
+
+# Read in patient data: tractmlm
+```{r}
+
+source('../../SU23 Rotation/sdoh_summer/aequitus/data/data_cleaners.R')
+
+patient_df <- read.csv("../../SU23 Rotation/sdoh_summer/aequitus/data/tractmlm.csv")
+
+# Before restricting to only black, white patients
+nrow(patient_df)
+
+# Restrict dataset to black, white patients only:
+patient_df <- patient_df[(patient_df$black == 1 | patient_df$white == 1),]
+
+nrow(patient_df)
+
+############################
+# Exclusion criteria; 
+endpoints <- c("readmit30bin", "death30bin", "composite30")
+
+# clean up the end-point related stuff
+for (colx in endpoints) {
+	patient_df <- remove_na(patient_df, colx)
+}
+
+## fix it to be adults aged >= 18
+patient_df <- patient_df[(patient_df$age_current >= 18), ]
+
+cat("After only adults: ", nrow(patient_df))
+```
+
+
+# Import AHRQ data:
+
+# Load AHRQ data: county, census tract
+```{r}
+
+# County AHRQ
+cty_ahrq_df_2010 <- read.csv("./COUNTY_AHRQ/SDOH_2010_COUNTY_1_0.csv") # header=FALSE
+cty_ahrq_df_2011 <- read.csv("./COUNTY_AHRQ/SDOH_2011_COUNTY_1_0.csv") # header=FALSE
+cty_ahrq_df_2012 <- read.csv("./COUNTY_AHRQ/SDOH_2012_COUNTY_1_0.csv") # header=FALSE
+cty_ahrq_df_2013 <- read.csv("./COUNTY_AHRQ/SDOH_2013_COUNTY_1_0.csv") # header=FALSE
+cty_ahrq_df_2014 <- read.csv("./COUNTY_AHRQ/SDOH_2014_COUNTY_1_0.csv") # header=FALSE
+cty_ahrq_df_2015 <- read.csv("./COUNTY_AHRQ/SDOH_2015_COUNTY_1_0.csv") # header=FALSE
+cty_ahrq_df_2016 <- read.csv("./COUNTY_AHRQ/SDOH_2016_COUNTY_1_0.csv") # header=FALSE
+cty_ahrq_df_2017 <- read.csv("./COUNTY_AHRQ/SDOH_2017_COUNTY_1_0.csv") # header=FALSE
+cty_ahrq_df_2018 <- read.csv("./COUNTY_AHRQ/SDOH_2018_COUNTY_1_1.csv") # header=FALSE
+
+# Use fill to ensured consistent number of columns, merge dfs from 
+# Merge dfs on the 6 items below in list.
+cty_ahrq_total <- rbindlist(list(cty_ahrq_df_2010, cty_ahrq_df_2011, cty_ahrq_df_2012, cty_ahrq_df_2013,
+                             cty_ahrq_df_2014, cty_ahrq_df_2015, cty_ahrq_df_2016, cty_ahrq_df_2017, cty_ahrq_df_2018), fill=TRUE)
+
+
+# Save names WITHOUT suffix first.
+cty_features_nosuffix <- colnames(cty_ahrq_total)
+# Rename cty_ahrq_total FEATURE names: append "_countylevel"
+
+# Columns to exclude from renaming
+exclude_columns_cty <- c("COUNTY", "COUNTYFIPS", "REGION", "STATE", "STATEFIPS", "TERRITORY", "YEAR")
+
+cty_ahrq_total <- cty_ahrq_total %>%
+  rename_at(vars(-one_of(exclude_columns_cty)), ~paste0(., "_countylevel"))
+
+# Import AHRQ data
+tr_ahrq_df_2010 <- read.csv("./TRACT_AHRQ/sdoh_2010_tract_1_0.csv") # header=FALSE
+tr_ahrq_df_2011 <- read.csv("./TRACT_AHRQ/sdoh_2011_tract_1_0.csv")
+tr_ahrq_df_2012 <- read.csv("./TRACT_AHRQ/sdoh_2012_tract_1_0.csv")
+tr_ahrq_df_2013 <- read.csv("./TRACT_AHRQ/sdoh_2013_tract_1_0.csv")
+tr_ahrq_df_2014 <- read.csv("./TRACT_AHRQ/sdoh_2014_tract_1_0.csv")
+tr_ahrq_df_2015 <- read.csv("./TRACT_AHRQ/sdoh_2015_tract_1_0.csv")
+tr_ahrq_df_2016 <- read.csv("./TRACT_AHRQ/sdoh_2016_tract_1_0.csv")
+tr_ahrq_df_2017 <- read.csv("./TRACT_AHRQ/sdoh_2017_tract_1_0.csv")
+tr_ahrq_df_2018 <- read.csv("./TRACT_AHRQ/sdoh_2018_tract_1_0.csv")
+
+tr_ahrq_total <- rbindlist(list(tr_ahrq_df_2010, tr_ahrq_df_2011, tr_ahrq_df_2012, tr_ahrq_df_2013,
+                             tr_ahrq_df_2014, tr_ahrq_df_2015, tr_ahrq_df_2016, tr_ahrq_df_2017, tr_ahrq_df_2018), fill=TRUE)
+
+
+# Save names WITHOUT suffix first.
+trct_features_nosuffix <- colnames(tr_ahrq_total)
+
+
+# Rename tr_ahrq_total FEATURE names: append "_census_tractlevel"
+# Columns to exclude from renaming
+exclude_columns_trct <- c("COUNTY", "COUNTYFIPS", "REGION", "STATE", "STATEFIPS", "TERRITORY", "TRACTFIPS", "TRACTFIPS_padded", "YEAR")
+
+tr_ahrq_total <- tr_ahrq_total %>%
+  rename_at(vars(-one_of(exclude_columns_trct)), ~paste0(., "_census_tractlevel"))
+
+
+
+# SAVE VAR NAMES: 
+# COUNTY:
+cty_features <- colnames(cty_ahrq_total)
+trct_features <- colnames(tr_ahrq_total)
+
+
+all_gran_feats_metadata <- readxl::read_excel("2010-18-all-granularities-AHRQ-dict.xlsx") # has 2010-2018 feats, metadata.
+
+# -- todo: merge all AHRQ features w/ their metadata (from cty_features_metadata ) 
+# length(set_intersection(cty_features, cty_feats_metadata$`Variable Name`))
+
+########### COUNTY LEVEL: #################
+# COUNTY: 1267 county features (2010-2018)
+length(set_intersection(cty_features_nosuffix, all_gran_feats_metadata$`Variable Name`))
+# Only select feats metadata which are present in "cty_features."
+cty_features_and_metadata <- all_gran_feats_metadata[all_gran_feats_metadata$`Variable Name` %in% cty_features_nosuffix, ]
+
+# Lower-case domain names.
+cty_features_and_metadata <- cty_features_and_metadata %>%
+  mutate(Domain = stri_trans_tolower(stri_trans_general(Domain, "Latin-ASCII")))
+
+# Columns to exclude from renaming
+exclude_columns_cty <- c("COUNTY", "COUNTYFIPS", "REGION", "STATE", "STATEFIPS", "TERRITORY", "YEAR")
+
+cty_features_and_metadata <- cty_features_and_metadata %>%
+  mutate(`Variable Name` = case_when(
+    `Variable Name` %in% exclude_columns_cty ~ `Variable Name`,
+    TRUE ~ paste0(`Variable Name`, "_countylevel")
+  ))
+
+
+# Print the modified dataframe
+print(cty_features_and_metadata)
+
+
+########### TRACT LEVEL: #################
+length(set_intersection(trct_features_nosuffix, all_gran_feats_metadata$`Variable Name`))
+# TRACT: 519 county features (2010-2018)
+# Only select feats metadata which are present in "trct_features_nosuffix"
+trct_features_and_metadata <- all_gran_feats_metadata[all_gran_feats_metadata$`Variable Name` %in% trct_features_nosuffix, ]
+
+# Lower-case domain names.
+trct_features_and_metadata <- trct_features_and_metadata %>%
+  mutate(Domain = stri_trans_tolower(stri_trans_general(Domain, "Latin-ASCII")))
+
+# Append _census_tractlevel to all feats in this METADATA:
+
+exclude_columns_trct <- c("COUNTY", "COUNTYFIPS", "REGION", "STATE", "STATEFIPS", "TERRITORY", "TRACTFIPS", "YEAR") # "TRACTFIPS_padded"
+
+trct_features_and_metadata <- trct_features_and_metadata %>%
+  mutate(`Variable Name` = case_when(
+    `Variable Name` %in% exclude_columns_trct ~ `Variable Name`,
+    TRUE ~ paste0(`Variable Name`, "_census_tractlevel")
+  ))
+
+
+# Print the modified dataframe
+print(trct_features_and_metadata)
+```
+
+# Save AHRQ census tract variables for LLM annotation:
+```{r}
+llm_tract_AHRQ_prompts <- trct_features_and_metadata
+
+# 1.) Rename columns: 
+# Domain, Variable Name, Variable Label, Data Source
+# domain, variable_name, variable_label, data_source
+llm_tract_AHRQ_prompts <- llm_tract_AHRQ_prompts %>%
+  rename(
+    domain = Domain,
+    SDOH_topic = Topic,
+    variable_name = `Variable Name`,  # Enclose the column name in backticks because it contains spaces
+    variable_label = `Variable Label`, # Enclose the column name in backticks because it contains spaces
+    data_source = `Data Source`       # Enclose the column name in backticks because it contains spaces
+  )
+
+
+# 2.) Don't include vars: drop these rows.
+exclude_columns_trct <- c("COUNTY", "COUNTYFIPS", "REGION", "STATE", "STATEFIPS", "TERRITORY", "TRACTFIPS", "YEAR") # "TRACTFIPS_padded"
+llm_tract_AHRQ_prompts <- llm_tract_AHRQ_prompts %>%
+  filter(!(variable_name %in% exclude_columns_trct))
+
+# We *could* insert full names in data_source:
+
+write.csv(llm_tract_AHRQ_prompts ,"AHRQ_tract_varnames_2010-2018.csv", row.names = FALSE )
+
+nrow(llm_tract_AHRQ_prompts)
+
+
+```
+
+
+```{r}
+# SVI Year: 2014. SVI Geo level: census tract. All states in US included. 
+SVI_2014_US <- read.csv("./TRACT_AHRQ/SVI_2014_US.csv") 
+
+keep_svi <- c(
+              "FIPS",
+              "SPL_THEMES",
+              "EPL_POV", "EPL_UNEMP", "EPL_PCI", "EPL_NOHSDP",
+              "EPL_AGE65", "EPL_AGE17", "EPL_DISABL", "EPL_SNGPNT",
+              "EPL_MINRTY", "EPL_LIMENG", "EPL_MUNIT", "EPL_MOBILE",
+              "EPL_CROWD", "EPL_NOVEH", "EPL_GROUPQ",
+              "RPL_THEME1",
+              "RPL_THEME2",
+              "RPL_THEME3",
+              "RPL_THEME4",
+              "EPL_POV", "EPL_UNEMP", "EPL_PCI", "EPL_NOHSDP",
+              "EPL_AGE65", "EPL_AGE17", "EPL_DISABL", "EPL_SNGPNT",
+              "EPL_MINRTY", "EPL_LIMENG", "EPL_MUNIT", "EPL_MOBILE",
+              "EPL_CROWD", "EPL_NOVEH", "EPL_GROUPQ",
+              "RPL_THEMES",
+              "F_TOTAL",
+              "E_HU", "E_HH", "E_POV", "E_UNEMP", "E_PCI", 
+                   "E_NOHSDP", "E_AGE65", "E_AGE17", "E_DISABL", "E_SNGPNT", 
+                   "E_MINRTY", "E_LIMENG", "E_MUNIT", "E_MOBILE", "E_CROWD", 
+                   "E_NOVEH", "E_GROUPQ",
+              "EP_POV", "EP_UNEMP", "EP_PCI", "EP_NOHSDP", 
+                            "EP_AGE65", "EP_AGE17", "EP_DISABL", "EP_SNGPNT", 
+                            "EP_MINRTY", "EP_LIMENG", "EP_MUNIT", "EP_MOBILE", 
+                            "EP_CROWD", "EP_NOVEH", "EP_GROUPQ")
+
+# Subset only necessary SVI columns + FIPS (tract fips). Don't need county fips.
+SVI_2014_US <- SVI_2014_US[, keep_svi]
+
+head(SVI_2014_US)
+
+```
+
+
+# Drop rows missing from patient data: 
+```{r}
+patient_df <- patient_df %>% drop_na(censustract)
+patient_df <- patient_df %>% drop_na(tractnum)
+
+patient_df <- patient_df %>% drop_na(countynum)
+patient_df <- patient_df %>% drop_na(statenum)
+
+###
+nrow(patient_df)
+```
+
+
+# Cast Census Tract (i.e., censustract variable), 
+  & County Fips (i.e., fips variable) to proper length for merge with AHRQ (keep these 2 cols as type *chr*)
+  
+---- NOTE: 
+- Tract fips: always should be 11 digits.
+- County fips: always should be 5 digits.
+
+```{r}
+
+########################
+# Patient data: cast FIPS values
+# County: to 5 chars. Note: 'fips' has state[2 chr]+county[3 chr]
+#patient_df$fips
+patient_df$fips <- sprintf("%05s", patient_df$fips)
+
+# Tract: to 11 chars
+#patient_df$censustract
+patient_df$censustract <- sprintf("%011s", patient_df$censustract)
+
+########################
+# 1.) AHRQ: cast FIPS values
+cty_ahrq_total$COUNTYFIPS_padded <- sprintf("%05s", cty_ahrq_total$COUNTYFIPS)
+
+tr_ahrq_total$TRACTFIPS_padded <- sprintf("%011s", tr_ahrq_total$TRACTFIPS)
+
+########################
+# 2.) SVI_2014_US
+# Cast FIPS to 11 digit <chr> (before, some are 10, some are 11).
+SVI_2014_US$FIPS <- sprintf("%011s", SVI_2014_US$FIPS)
+
+
+########################
+# 3.) NaNDA datasets: 
+
+
+# Cast: census tract FIPS for all.
+#pollution_d16_2020$TRACT_FIPS20 <- sprintf("%011s", pollution_d16_2020$TRACT_FIPS20)
+#school_d22$TRACT_FIPS10 <- sprintf("%011s", school_d22$TRACT_FIPS10)
+
+# 7 Datasets for MLHC:
+# 1.) 
+broadband_df$TRACT_FIPS10 <- sprintf("%011s", broadband_df$TRACT_FIPS10)
+# 2.) CSV not TSV
+edtrain_df$tract_fips10 <- sprintf("%011s", edtrain_df$tract_fips10)
+# 3.) 
+internet_df$TRACT_FIPS10 <- sprintf("%011s", internet_df$TRACT_FIPS10)
+# 4.) 
+schoolneigh_df$TRACT_FIPS10 <- sprintf("%011s", schoolneigh_df$TRACT_FIPS10)
+# 5.) V4.
+polluting_df$TRACT_FIPS10 <-  sprintf("%011s", polluting_df$TRACT_FIPS10)
+#  6.) 
+schooldist_df$TRACT_FIPS10 <- sprintf("%011s", schooldist_df$TRACT_FIPS10)
+# 7.) CSV not TSV here.
+postbanks_df$tract_fips10 <- sprintf("%011s", postbanks_df$tract_fips10)
+
+
+# NaNDA: rename [geo & year] columns --> CAPITAL letters:
+
+# 2.) CSV not TSV
+colnames(edtrain_df)[colnames(edtrain_df) == "tract_fips10"] <- toupper("tract_fips10")
+colnames(edtrain_df)[colnames(edtrain_df) == "year"] <- toupper("year")
+
+# 7.) CSV not TSV here.
+colnames(postbanks_df)[colnames(postbanks_df) == "tract_fips10"] <- toupper("tract_fips10")
+colnames(postbanks_df)[colnames(postbanks_df) == "year"] <- toupper("year")
+
+
+# ALL NaNDA: Rename all FEATURE columns to be upper case.
+colnames(broadband_df) <- toupper(colnames(broadband_df))
+colnames(edtrain_df) <- toupper(colnames(edtrain_df))
+colnames(internet_df) <- toupper(colnames(internet_df))
+colnames(schoolneigh_df) <- toupper(colnames(schoolneigh_df))
+colnames(polluting_df) <- toupper(colnames(polluting_df))
+colnames(schooldist_df) <- toupper(colnames(schooldist_df))
+colnames(postbanks_df) <- toupper(colnames(postbanks_df))
+
+```
+
+# NaNDA: Impute: 
+- approach 1: For each variable V, impute most recent value (past year Y-1) of variable V in census tract C.
+- approach 2: If no past years, impute the value using the closest year of V in census tract C.
+```{r}
+# Define a function to impute missing values based on the closest non-missing value from a previous year
+impute_missing_helper <- function(x) {
+  x_filled <- zoo::na.locf(x, fromLast = TRUE, na.rm = FALSE)
+  x_filled <- zoo::na.locf(x_filled, na.rm = FALSE)
+  # Ensure the imputed variable has the same size as the original variable
+  # Find the NA values that were not imputed
+  return(x_filled)
+}
+
+# Assumes we have TRACT_FIPS10, YEAR
+impute_df <- function(imp_df) {
+  # Sort imp_df
+  imp_df <- imp_df %>%
+  arrange(TRACT_FIPS10, YEAR)
+  # Impute imp_df with helper
+  imp_df <- imp_df %>%
+  group_by(TRACT_FIPS10) %>%
+  mutate_at(vars(-YEAR, -TRACT_FIPS10), impute_missing_helper)
+  return(imp_df)
+}
+
+
+# Impute missing values for each dataset:
+broadband_df <- impute_df(broadband_df)
+edtrain_df <- impute_df(edtrain_df)
+# internet_df <- impute_df(internet_df) # Only has 1 year, not many. The ACS-derived data contains one measure for the entire period of 2015-2019.
+schoolneigh_df <- impute_df(schoolneigh_df)
+polluting_df <- impute_df(polluting_df)
+schooldist_df <- impute_df(schooldist_df)
+postbanks_df <- impute_df(postbanks_df)
+```
+
+# Check NaNDA imputation results:
+```{r}
+
+sum(is.na(broadband_df$RFHSC_PER_1000_HHS)) # Only 38 values still missing across all tracts & years
+
+sum(is.na(edtrain_df$aland10)) # 14028 values still missing across all tracts & years. These are from Puerto Rico, Virgin Islands etc...
+missing_rates <- broadband_df %>%
+  group_by(TRACT_FIPS10) %>%
+  summarize(
+    missing_rate_A = mean(is.na(RFHSC_PER_1000_HHS_10_1))
+  )
+sum(missing_rates$missing_rate_A == 1)
+# --> Tells us there are 19 census tracts that have NO values over 2014 - 2020 for the variables RFHSC_PER_1000_HHS, RFHSC_PER_1000_HHS_10_1.
+# If patients live in these census tracts, we will drop these patients.
+
+```
+
+# AHRQ: Impute
+# ###########################################
+```{r}
+library(rlang)
+
+# Define a function to impute missing values based on the closest non-missing value from a previous year
+impute_missing_helper <- function(x) {
+  x_filled <- zoo::na.locf(x, fromLast = TRUE, na.rm = FALSE)
+  x_filled <- zoo::na.locf(x_filled, na.rm = FALSE)
+  # Ensure the imputed variable has the same size as the original variable
+  # Find the NA values that were not imputed
+  return(x_filled)
+}
+
+# Assumes we have TRACT_FIPS10, YEAR
+impute_df <- function(imp_df, yr_var, geo_var) {
+  # Sort imp_df
+  imp_df <- imp_df %>%
+  arrange(!!sym(geo_var), !!sym(yr_var))
+  # Impute imp_df with helper
+  imp_df <- imp_df %>%
+  group_by(!!sym(geo_var)) %>%
+  mutate_at(vars(-!!sym(yr_var), -!!sym(geo_var)), impute_missing_helper)
+  return(imp_df)
+}
+
+# Impute county.
+cty_ahrq_total <- impute_df(cty_ahrq_total, 'YEAR', 'COUNTYFIPS_padded') # "COUNTYFIPS_padded", "YEAR"
+# Impute tract.
+tr_ahrq_total <- impute_df(tr_ahrq_total, 'YEAR', 'TRACTFIPS_padded') # "TRACTFIPS_padded", "YEAR"
+
+```
+
+# Check NaNDA imputation results:
+```{r}
+sum(is.na(cty_ahrq_total$ACS_TOT_POP_WT_countylevel)) # Only 38 values still missing across all tracts & years
+
+
+```
+
+
+# Merge: 
+- tractmlm: patient_df
+SDOH data sources: 
+1+ ahrq: 
+  - cty_ahrq_total
+  - tr_ahrq_total 
+  
+2+ SVI_2014_US: 
+3+ NaNDA: (7) datasets. [capital or lowercase]
+```{r}
+# MERGE: both on subject's 'baselineyear' (admission year)
+# 1.) Bring in County AHRQ, Census Tract AHRQ:
+nrow(cty_ahrq_total)
+sdoh_baseline <- merge(patient_df, cty_ahrq_total, by.x=c("fips", "baselineyear"), by.y=c("COUNTYFIPS_padded", "YEAR"), all.x = TRUE)
+# nrow(sdoh_baseline_cty)
+```
+
+```{r}
+# Tract AHRQ baseline: use later for patient-level cenus tract missingness calculations. 
+sdoh_baseline <- merge(sdoh_baseline, tr_ahrq_total, by.x=c("censustract", "baselineyear"), by.y=c("TRACTFIPS_padded", "YEAR"), all.x = TRUE)
+# nrow(sdoh_baseline_cty)
+```
+
+
+```{r}
+# Next, merge in SVI 2014 data:
+# use cty code: sdoh_baseline ++ SVI_2014_US (by 'censustract', 'FIPS')
+
+# 2.) Bring in 2014 SVI by Census Tract:
+sdoh_baseline <- merge(sdoh_baseline, SVI_2014_US  , by.x="censustract", by.y="FIPS", all.x = TRUE )
+nrow(sdoh_baseline)
+```
+
+
+
+```{r}
+# 3.) Bring in (7) NaNDA datasets: 1 at a time.
+# census tract level.
+
+# 1.) 
+sdoh_baseline <- merge(sdoh_baseline, broadband_df  , by.x=c("censustract", "baselineyear"), by.y=c("TRACT_FIPS10", "YEAR"), all.x = TRUE )
+# 2.) 
+sdoh_baseline <- merge(sdoh_baseline, edtrain_df  , by.x=c("censustract", "baselineyear"), by.y=c("TRACT_FIPS10", "YEAR"), all.x = TRUE )
+# 3.) 
+# Only has 1 year, not many. The ACS-derived data contains one measure for the entire period of 2015-2019.
+sdoh_baseline <- merge(sdoh_baseline, internet_df  , by.x=c("censustract"), by.y=c("TRACT_FIPS10"), all.x = TRUE )
+# 4.) 
+sdoh_baseline <- merge(sdoh_baseline, schoolneigh_df  , by.x=c("censustract", "baselineyear"), by.y=c("TRACT_FIPS10", "YEAR"), all.x = TRUE )
+# 5.) 
+sdoh_baseline <- merge(sdoh_baseline, polluting_df  , by.x=c("censustract", "baselineyear"), by.y=c("TRACT_FIPS10", "YEAR"), all.x = TRUE )
+#  6.) 
+sdoh_baseline <- merge(sdoh_baseline, schooldist_df  , by.x=c("censustract", "baselineyear"), by.y=c("TRACT_FIPS10", "YEAR"), all.x = TRUE )
+# 7.) CSV not TSV here.
+sdoh_baseline <- merge(sdoh_baseline, postbanks_df  , by.x=c("censustract", "baselineyear"), by.y=c("TRACT_FIPS10", "YEAR"), all.x = TRUE )
+
+
+nrow(sdoh_baseline)
+```
+
+
+```{r}
+head(sdoh_baseline) # Patient data + matched tract.
+nrow(sdoh_baseline)
+```
+
+
+# Before feeding to classifiers, drop potential PHI from sdoh_baseline
+```{r}
+
+
+remove_cols <- c("patient_name", "Patient",  "Patient_Address",
+                 "", "Patient_Home_Street_Address", "Patient_Home_City", "Patient_Home_State", "dob",
+                 "Patient_Death_Day")
+
+drop_vars <- c("patient_name", "Patient_Home_Street_Address", "Patient", 
+               "Patient_Address", "Match_Address", "Patient_Birth_Date", "Patient_Home_City", "Patient_Home_State",
+               "dob", "Patient_Death_Day",
+               "Lon__Lat", "cxy_address", "cxy_matched_address", "cxy_tiger_line_id", "cxy_tract_id", "cxy_block_id")
+# Remove drop_vars
+sdoh_baseline <- sdoh_baseline[, !(names(sdoh_baseline) %in% drop_vars)]
+
+```
+
+
+
+
+# Build subgroup variables.
+```{r}
+sdoh_baseline <- sdoh_baseline %>%
+  mutate(baselineyear = as.numeric(baselineyear), na.rm=FALSE)
+
+############ Prepare subgroup flags:
+# Subgroups to eval on: 
+# 1. Race
+# white <int>: 0/1
+# black <int>: 0/1
+# other <int>: 0/1
+sdoh_baseline <- sdoh_baseline %>%
+  mutate(blackorwhite = if_else(black == 1 | white == 1, 1, 0))
+
+# 2. Sex (or binary gender)
+# female <int>: 0/1
+# ADD this field: male <int>: 0/1
+sdoh_baseline <- sdoh_baseline %>%
+  mutate(male = if_else(female == 0, 1, 0))
+
+# 3. The 6 subgroup combinations: 
+# c(white_male, black_male, other_male, white_female, black_female, other_female)
+
+# Note that all 6 are mutually exclusive here.
+sdoh_baseline <- sdoh_baseline %>%
+  mutate(white_male = if_else(white == 1 & female == 0, 1, 0))
+sdoh_baseline <- sdoh_baseline %>%
+  mutate(black_male = if_else((black == 1 & female == 0), 1, 0))
+sdoh_baseline <- sdoh_baseline %>%
+  mutate(other_male = if_else(other == 1 & female == 0, 1, 0))
+sdoh_baseline <- sdoh_baseline %>%
+  mutate(white_female = if_else(white == 1 & female == 1, 1, 0))
+sdoh_baseline <- sdoh_baseline %>%
+  mutate(black_female = if_else(black == 1 & female == 1, 1, 0))
+sdoh_baseline <- sdoh_baseline %>%
+  mutate(other_female = if_else(other == 1 & female == 1, 1, 0))
+
+
+
+#######################
+# SUBGROUP FOR AGEs: 
+quarts <- quantile(sdoh_baseline$age_current, probs = seq(0, 1, 0.25))
+upper_Q1_age <- quarts[2]
+upper_Q2_age <- quarts[3]
+upper_Q3_age <- quarts[4]
+upper_Q4_age <- quarts[5]
+
+sdoh_baseline <- sdoh_baseline %>%
+  mutate(age_Q1 = if_else(age_current <= upper_Q1_age, 1, 0))
+
+sdoh_baseline <- sdoh_baseline %>%
+  mutate(age_Q2 = if_else(age_current <= upper_Q2_age & age_current > upper_Q1_age, 1, 0))
+
+sdoh_baseline <- sdoh_baseline %>%
+  mutate(age_Q3 = if_else(age_current <= upper_Q3_age & age_current > upper_Q2_age, 1, 0))
+
+sdoh_baseline <- sdoh_baseline %>%
+  mutate(age_Q4 = if_else(age_current <= upper_Q4_age & age_current > upper_Q3_age, 1, 0))
+
+
+
+#######################
+# HF: Sex & age quartiles
+#######################
+# Hypertension
+sdoh_baseline <- sdoh_baseline %>%
+  mutate(no_htn = if_else(htn == 0, 1, 0))
+
+#######################
+# Coronary Artery Disease
+sdoh_baseline <- sdoh_baseline %>%
+  mutate(no_cad = if_else(cad == 0, 1, 0))
+
+#######################
+# Chronic Kidney Disease
+sdoh_baseline <- sdoh_baseline %>%
+  mutate(no_ckd = if_else(ckd == 0, 1, 0))
+
+
+#######################
+# Charlson Comorbidity Index
+  # Theoretical Max CCI: 24 (updated version) or 29 (older version).
+  # Our dataset: Max CCI = 22.
+CCI_quarts <- quantile(sdoh_baseline$cci, probs = seq(0, 1, 0.25))
+
+# 1.) CCI steps 0-6, 7+ groups.
+# 
+
+
+sdoh_baseline <- sdoh_baseline %>%
+  mutate(CCI_0 = if_else(cci == 0, 1, 0))
+
+sdoh_baseline <- sdoh_baseline %>%
+  mutate(CCI_1 = if_else(cci == 1, 1, 0))
+
+sdoh_baseline <- sdoh_baseline %>%
+  mutate(CCI_2 = if_else(cci == 2, 1, 0))
+
+sdoh_baseline <- sdoh_baseline %>%
+  mutate(CCI_3 = if_else(cci == 3, 1, 0))
+
+sdoh_baseline <- sdoh_baseline %>%
+  mutate(CCI_4 = if_else(cci == 4, 1, 0))
+
+sdoh_baseline <- sdoh_baseline %>%
+  mutate(CCI_5 = if_else(cci == 5, 1, 0))
+
+sdoh_baseline <- sdoh_baseline %>%
+  mutate(CCI_6 = if_else(cci == 6, 1, 0))
+
+sdoh_baseline <- sdoh_baseline %>%
+  mutate(CCI_7up = if_else(cci >= 7, 1, 0))
+
+
+
+
+
+# 2.) CCI quartiles (second way to evaluate CCI)
+upper_Q1_CCI <- CCI_quarts[2]
+upper_Q2_CCI <- CCI_quarts[3]
+upper_Q3_CCI <- CCI_quarts[4]
+upper_Q4_CCI <- CCI_quarts[5]
+
+
+sdoh_baseline <- sdoh_baseline %>%
+  mutate(CCI_Q1 = if_else(cci <= upper_Q1_CCI, 1, 0))
+
+sdoh_baseline <- sdoh_baseline %>%
+  mutate(CCI_Q2 = if_else(cci <= upper_Q2_CCI & cci > upper_Q1_CCI, 1, 0))
+
+sdoh_baseline <- sdoh_baseline %>%
+  mutate(CCI_Q3 = if_else(cci <= upper_Q3_CCI & cci > upper_Q2_CCI, 1, 0))
+
+sdoh_baseline <- sdoh_baseline %>%
+  mutate(CCI_Q4 = if_else(cci > upper_Q3_CCI, 1, 0))
+  
+# TODO: Make feat set of AHRQ total + NaNDA total.
+# TODO: adjust variable names!! Make all NaNDA vars *lowercase.*
+# 3.) education = upper case
+
+
+
+nrow(sdoh_baseline)
+```
+
+
+```{r}
+############
+
+sdoh_baseline <- create_folds(as.data.frame(sdoh_baseline), endpoints) # NOTE: For nested k-fold CV.
+
+
+write.csv(sdoh_baseline, file="./MLHC_modelinputs.csv", row.names=FALSE) 
+#old: clean_tract_ahrq_AQIimp1_baseline
+
+#table(sdoh_baseline$readmit30bin_folds)
+#table(sdoh_baseline$death30bin_folds)
+#table(sdoh_baseline$composite30_folds)
+
+# Ex run: 80-20 train-test split --> then k-fold s
+#set.seed(42)
+#sample <- sample(c(TRUE, FALSE), nrow(sdoh_baseline), replace=TRUE, prob=c(0.8,0.2))
+#train  <- sdoh_baseline[sample, ]
+#test   <- sdoh_baseline[!sample, ]
+
+
+# twoormore_gap
+# 36% of patients have this NaNDA feat missing even after "closest year" imp... (ADEN_611410)
+sum(is.na(sdoh_baseline$ADEN_611410))/nrow(sdoh_baseline) # COUNT_EMP_522110
+
+```
+
+# Check input file variables:
+```{r}
+mvd_input_total_feats <- read.csv(file="../../SU23 Rotation/sdoh_summer/private_repo/data/MLHC Total/MLHC_modelinputs.csv")
+
+
+sum(is.na(mvd_input_total_feats$COUNT_SALES_6111))
+
+sum(is.na(mvd_input_total_feats$POPULATION.x))
+
+sum(is.na(mvd_input_total_feats$POPULATION.y))
+
+
+```
+
+
+
+# ###############################
+# Table 1. SUMMARY STATS
+# Read in model input data
+```{r}
+input_total_feats <- read.csv(file="./MLHC_modelinputs.csv")
+
+
+# Check readmit30bin positive rates by "race" subgroup, fold.
+input_total_feats %>% group_by(Race, readmit30bin_folds) %>% summarize(newvar = mean(readmit30bin, na.rm = TRUE))
+########################
+```
+
+
+
+```{r}
+## tableone package itself
+library(tableone)
+library(kableExtra)
+
+# Make strata column: white, black, other (1,2,3)
+# make using cols:
+# Drop "Race" == "other"
+
+
+
+
+input_total_feats <- input_total_feats <- transform(
+  input_total_feats, "Race"= ifelse(white==1, "White", ifelse(black==1, "Black", NA)))
+  
+
+# Make insurance column: "privinsurance","Medicare", "Medicaid",
+input_total_feats <- input_total_feats <- transform(
+  input_total_feats, "Insurance_type"= ifelse(privinsurance==1, "Private", ifelse(Medicare==1, "Medicare", ifelse(Medicaid==1, "Medicaid", "Not recorded"))))
+  
+
+# Make HF type: hfsystolic, hfdiastolic, hfother
+input_total_feats <- input_total_feats <- transform(
+  input_total_feats, "HF_classification"= ifelse(hfsystolic==1, "Systolic (HFrEF)", ifelse(hfdiastolic==1, "Diastolic (HFpEF)", ifelse(hfother==1, "Other", "Not recorded"))))
+
+
+
+# vars to summarize (i.e demographics)
+# htn: Hypertension
+# diabetes: ___not available___
+# cad: Coronary Artery Disease
+# ckd: Chronic Kidney Disease
+# sdi: Social deprivation index score
+# ADI_national_rank: 
+# ADI_state_rank: 
+# svi: i.e. RPL_THEMES
+# cci: Charlson Comorbidity Index
+# Systolic_BP: Systolic blood pressure, mm Hg
+# Heart_Rate: Heart Rate, beats per minute
+# Resp: Respiratory rate, breaths per minute
+
+# Rename feats not needing spaces: 
+colnames(input_total_feats)[colnames(input_total_feats) == "age_current"] ="Age, years"
+colnames(input_total_feats)[colnames(input_total_feats) == "age_Q1"] ="Age, Q1"
+colnames(input_total_feats)[colnames(input_total_feats) == "age_Q2"] ="Age, Q2"
+colnames(input_total_feats)[colnames(input_total_feats) == "age_Q3"] ="Age, Q3"
+colnames(input_total_feats)[colnames(input_total_feats) == "age_Q4"] ="Age, Q4"
+
+colnames(input_total_feats)[colnames(input_total_feats) == "female"] = "Female"
+colnames(input_total_feats)[colnames(input_total_feats) == "male"] = "Male"
+
+colnames(input_total_feats)[colnames(input_total_feats) == "black"] = "Black"
+colnames(input_total_feats)[colnames(input_total_feats) == "white"] = "White"
+
+colnames(input_total_feats)[colnames(input_total_feats) == "htn"] = "Hypertension"
+colnames(input_total_feats)[colnames(input_total_feats) == "cad"] = "Coronary Artery Disease"
+colnames(input_total_feats)[colnames(input_total_feats) == "ckd"] = "Chronic Kidney Disease"
+colnames(input_total_feats)[colnames(input_total_feats) == "cci"] = "Charlson Comorbidity Index"
+colnames(input_total_feats)[colnames(input_total_feats) == "Systolic_BP"] = "Systolic blood pressure, mm Hg"
+colnames(input_total_feats)[colnames(input_total_feats) == "Heart_Rate"] = "Heart Rate, beats per minute"
+colnames(input_total_feats)[colnames(input_total_feats) == "Resp"] = "Respiratory rate, breaths per minute"
+colnames(input_total_feats)[colnames(input_total_feats) == "sdi"] = "Social Deprivation Index (percentile)"
+colnames(input_total_feats)[colnames(input_total_feats) == "ADI_national_rank"] = "Area Deprivation Index, national rank (percentile)"
+colnames(input_total_feats)[colnames(input_total_feats) == "ADI_state_rank"] = "Area Deprivation Index, state rank (percentile)"
+colnames(input_total_feats)[colnames(input_total_feats) == "RPL_THEMES"] = "Social Vulnerability Index score (composite score)"
+
+# New feats:
+#colnames(input_total_feats)[colnames(input_total_feats) == "readmit30bin"] = "30-day Binary HF Readmission"
+#colnames(input_total_feats)[colnames(input_total_feats) == "death30bin"] = "30-day Binary HF Death"
+
+# Referring specialties: 
+colnames(input_total_feats)[colnames(input_total_feats) == "specialcvd"] = "CVD Specialist" 
+colnames(input_total_feats)[colnames(input_total_feats) == "specialint"] = "Int. Med. Specialist"
+colnames(input_total_feats)[colnames(input_total_feats) == "specialeme"] = "EME Specialist"
+colnames(input_total_feats)[colnames(input_total_feats) == "specialoth"] = "Other Specialist"
+
+# Location treated: 
+colnames(input_total_feats)[colnames(input_total_feats) == "loceuhfloor"] = "UH Floor" 
+colnames(input_total_feats)[colnames(input_total_feats) == "loceclhicu"] = "CLH ICU"
+colnames(input_total_feats)[colnames(input_total_feats) == "loceclhfloor"] = "CLH Floor"
+colnames(input_total_feats)[colnames(input_total_feats) == "loceuhicu"] = "UH ICU"
+
+# SDOH feats (comp -- other Circulation HF paper)
+
+colnames(input_total_feats)[colnames(input_total_feats) == "percnt_ltfpl100"] = "percnt_ltfpl100" 
+colnames(input_total_feats)[colnames(input_total_feats) == "percnt_singlparntfly"] = "percnt_singlparntfly" 
+colnames(input_total_feats)[colnames(input_total_feats) == "percnt_dropout"] = "percnt_dropout" 
+colnames(input_total_feats)[colnames(input_total_feats) == "percnt_rentoccup"] = "percnt_rentoccup" 
+colnames(input_total_feats)[colnames(input_total_feats) == "percnt_crowding"] = "percnt_crowding" 
+colnames(input_total_feats)[colnames(input_total_feats) == "percnt_nonemp"] = "percnt_nonemp" 
+colnames(input_total_feats)[colnames(input_total_feats) == "percnt_unemp"] = "percnt_unemp" 
+colnames(input_total_feats)[colnames(input_total_feats) == "percnt_highneeds"] = "percnt_highneeds" 
+colnames(input_total_feats)[colnames(input_total_feats) == "percnt_hispanic"] = "percnt_hispanic" 
+colnames(input_total_feats)[colnames(input_total_feats) == "percnt_frgnborn"] = "percnt_frgnborn" 
+colnames(input_total_feats)[colnames(input_total_feats) == "percnt_black"] = "percnt_black" 
+colnames(input_total_feats)[colnames(input_total_feats) == "LOScheck"] = "Length of stay" 
+
+# sdi
+# ADI_state_rank
+# ADI_national_rank
+
+
+# Rename feats with spaces: 
+colnames(input_total_feats)[colnames(input_total_feats) == "Insurance_type"] = "Insurance type"
+colnames(input_total_feats)[colnames(input_total_feats) == "HF_classification"] = "HF classification"
+
+
+
+
+# Length of stay, days: LOScheck
+#myVars <- c("Age, years", "female", "Insurance type", "HF classification", "htn", "cad", "ckd", "cci", 
+#            "Systolic_BP", "Heart_Rate", "Resp", 
+#            "LOScheck", "sdi", "ADI_national_rank", "ADI_state_rank", "RPL_THEMES")
+
+myVars <- c("Age, years","Age, Q1","Age, Q2","Age, Q3","Age, Q4", "Male", "Female", "Black", "White",
+            "CVD Specialist", "Int. Med. Specialist", "EME Specialist", "Other Specialist",
+            "UH Floor", "CLH ICU", "CLH Floor", "UH ICU",
+            
+            "Insurance type", "HF classification", "Hypertension", "Coronary Artery Disease", "Chronic Kidney Disease", 
+            "Charlson Comorbidity Index", 
+            "Systolic blood pressure, mm Hg", "Heart Rate, beats per minute", "Respiratory rate, breaths per minute", 
+            "Length of stay", "Social Deprivation Index (percentile)", "Area Deprivation Index, national rank (percentile)", "Area Deprivation Index, state rank (percentile)", "Social Vulnerability Index score (composite score)",
+            "percnt_ltfpl100", "percnt_singlparntfly", "percnt_dropout", "percnt_rentoccup", "percnt_crowding", "percnt_nonemp", "percnt_unemp", "percnt_highneeds", "percnt_hispanic", "percnt_frgnborn", "percnt_black"
+            
+            )
+
+
+## Vector of categorical variables that need transformation
+catVars <- c("Women", "Insurance type", "HF classification", "Hypertension", "Coronary Artery Disease", "Chronic Kidney Disease")
+
+tab1 <- CreateTableOne(vars = myVars, strata = "readmit30bin", data = input_total_feats, addOverall = TRUE) 
+# For race strata instead of outcome strata: strata = "Race"
+# For p-values: test=TRUE, smd = TRUE
+
+# typeof(tab1["test"])
+
+
+
+# If you just say nonnormal = TRUE, all variables are summarized the “nonnormal” way.
+#print(tab1, formatOptions = list(big.mark = ","))
+# kable(p, format = "latex")
+p <- print(tab1, printToggle = FALSE, noSpaces = TRUE)
+p <- p[,1:4] # Remove "test" column.
+
+kable(p, format = "latex", booktabs = TRUE)
+```
+
+
+
+

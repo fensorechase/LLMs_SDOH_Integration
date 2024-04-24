@@ -1,0 +1,123 @@
+
+
+
+% LLAMA MODELS
+
+
+python general_LLM_inference_rel_extraction_col_type.py --base_model='meta-llama/Llama-2-7b-chat-hf' --feat_set='a' --num_shots=0 --input_data_file='INPUT_NaNDA.csv' --output_data_file='a_zeroshot_llama7b-chat_domain_NaNDA_outputs.csv'
+python general_LLM_inference_rel_extraction_col_type.py --base_model='meta-llama/Llama-2-7b-chat-hf' --feat_set='b' --num_shots=0 --input_data_file='INPUT_NaNDA.csv' --output_data_file='b_zeroshot_llama7b-chat_domain_NaNDA_outputs.csv'
+python general_LLM_inference_rel_extraction_col_type.py --base_model='meta-llama/Llama-2-7b-chat-hf' --feat_set='c' --num_shots=0 --input_data_file='INPUT_NaNDA.csv' --output_data_file='c_zeroshot_llama7b-chat_domain_NaNDA_outputs.csv'
+
+python general_LLM_inference_rel_extraction_col_type.py --base_model='meta-llama/Llama-2-7b-chat-hf' --feat_set='ab' --num_shots=0 --input_data_file='INPUT_NaNDA.csv' --output_data_file='ab_zeroshot_llama7b-chat_domain_NaNDA_outputs.csv'
+python general_LLM_inference_rel_extraction_col_type.py --base_model='meta-llama/Llama-2-7b-chat-hf' --feat_set='ac' --num_shots=0 --input_data_file='INPUT_NaNDA.csv' --output_data_file='ac_zeroshot_llama7b-chat_domain_NaNDA_outputs.csv'
+python general_LLM_inference_rel_extraction_col_type.py --base_model='meta-llama/Llama-2-7b-chat-hf' --feat_set='bc' --num_shots=0 --input_data_file='INPUT_NaNDA.csv' --output_data_file='bc_zeroshot_llama7b-chat_domain_NaNDA_outputs.csv'
+
+python general_LLM_inference_rel_extraction_col_type.py --base_model='meta-llama/Llama-2-7b-chat-hf' --feat_set='abc' --num_shots=0 --input_data_file='INPUT_NaNDA.csv' --output_data_file='abc_zeroshot_llama7b-chat_domain_NaNDA_outputs.csv'
+
+
+
+python general_LLM_inference_rel_extraction_col_type.py --base_model='meta-llama/Llama-2-13b-chat-hf' --feat_set='a' --num_shots=0 --input_data_file='INPUT_NaNDA.csv' --output_data_file='a_zeroshot_llama13b-chat_domain_NaNDA_outputs.csv'
+python general_LLM_inference_rel_extraction_col_type.py --base_model='meta-llama/Llama-2-13b-chat-hf' --feat_set='b' --num_shots=0 --input_data_file='INPUT_NaNDA.csv' --output_data_file='b_zeroshot_llama13b-chat_domain_NaNDA_outputs.csv'
+python general_LLM_inference_rel_extraction_col_type.py --base_model='meta-llama/Llama-2-13b-chat-hf' --feat_set='c' --num_shots=0 --input_data_file='INPUT_NaNDA.csv' --output_data_file='c_zeroshot_llama13b-chat_domain_NaNDA_outputs.csv'
+
+python general_LLM_inference_rel_extraction_col_type.py --base_model='meta-llama/Llama-2-13b-chat-hf' --feat_set='ab' --num_shots=0 --input_data_file='INPUT_NaNDA.csv' --output_data_file='ab_zeroshot_llama13b-chat_domain_NaNDA_outputs.csv'
+python general_LLM_inference_rel_extraction_col_type.py --base_model='meta-llama/Llama-2-13b-chat-hf' --feat_set='ac' --num_shots=0 --input_data_file='INPUT_NaNDA.csv' --output_data_file='ac_zeroshot_llama13b-chat_domain_NaNDA_outputs.csv'
+python general_LLM_inference_rel_extraction_col_type.py --base_model='meta-llama/Llama-2-13b-chat-hf' --feat_set='bc' --num_shots=0 --input_data_file='INPUT_NaNDA.csv' --output_data_file='bc_zeroshot_llama13b-chat_domain_NaNDA_outputs.csv'
+
+python general_LLM_inference_rel_extraction_col_type.py --base_model='meta-llama/Llama-2-13b-chat-hf' --feat_set='abc' --num_shots=0 --input_data_file='INPUT_NaNDA.csv' --output_data_file='abc_zeroshot_llama13b-chat_domain_NaNDA_outputs.csv'
+
+
+
+python general_LLM_inference_rel_extraction_col_type.py --base_model='meta-llama/Llama-2-70b-chat-hf' --feat_set='a' --num_shots=0 --input_data_file='INPUT_NaNDA.csv' --output_data_file='a_zeroshot_llama70b-chat_domain_NaNDA_outputs.csv'
+python general_LLM_inference_rel_extraction_col_type.py --base_model='meta-llama/Llama-2-70b-chat-hf' --feat_set='b' --num_shots=0 --input_data_file='INPUT_NaNDA.csv' --output_data_file='b_zeroshot_llama70b-chat_domain_NaNDA_outputs.csv'
+python general_LLM_inference_rel_extraction_col_type.py --base_model='meta-llama/Llama-2-70b-chat-hf' --feat_set='c' --num_shots=0 --input_data_file='INPUT_NaNDA.csv' --output_data_file='c_zeroshot_llama70b-chat_domain_NaNDA_outputs.csv'
+
+python general_LLM_inference_rel_extraction_col_type.py --base_model='meta-llama/Llama-2-70b-chat-hf' --feat_set='ab' --num_shots=0 --input_data_file='INPUT_NaNDA.csv' --output_data_file='ab_zeroshot_llama70b-chat_domain_NaNDA_outputs.csv'
+python general_LLM_inference_rel_extraction_col_type.py --base_model='meta-llama/Llama-2-70b-chat-hf' --feat_set='ac' --num_shots=0 --input_data_file='INPUT_NaNDA.csv' --output_data_file='ac_zeroshot_llama70b-chat_domain_NaNDA_outputs.csv'
+python general_LLM_inference_rel_extraction_col_type.py --base_model='meta-llama/Llama-2-70b-chat-hf' --feat_set='bc' --num_shots=0 --input_data_file='INPUT_NaNDA.csv' --output_data_file='bc_zeroshot_llama70b-chat_domain_NaNDA_outputs.csv'
+
+python general_LLM_inference_rel_extraction_col_type.py --base_model='meta-llama/Llama-2-70b-chat-hf' --feat_set='abc' --num_shots=0 --input_data_file='INPUT_NaNDA.csv' --output_data_file='abc_zeroshot_llama70b-chat_domain_NaNDA_outputs.csv'
+
+
+
+
+% GEMMA MODELS
+
+python general_LLM_inference_rel_extraction_col_type.py --base_model='google/gemma-2b-it' --feat_set='a' --num_shots=0 --input_data_file='INPUT_NaNDA.csv' --output_data_file='a_zeroshot_gemma2b-it_domain_NaNDA_outputs.csv'
+python general_LLM_inference_rel_extraction_col_type.py --base_model='google/gemma-2b-it' --feat_set='b' --num_shots=0 --input_data_file='INPUT_NaNDA.csv' --output_data_file='b_zeroshot_gemma2b-it_domain_NaNDA_outputs.csv'
+python general_LLM_inference_rel_extraction_col_type.py --base_model='google/gemma-2b-it' --feat_set='c' --num_shots=0 --input_data_file='INPUT_NaNDA.csv' --output_data_file='c_zeroshot_gemma2b-it_domain_NaNDA_outputs.csv'
+
+python general_LLM_inference_rel_extraction_col_type.py --base_model='google/gemma-2b-it' --feat_set='ab' --num_shots=0 --input_data_file='INPUT_NaNDA.csv' --output_data_file='ab_zeroshot_gemma2b-it_domain_NaNDA_outputs.csv'
+python general_LLM_inference_rel_extraction_col_type.py --base_model='google/gemma-2b-it' --feat_set='ac' --num_shots=0 --input_data_file='INPUT_NaNDA.csv' --output_data_file='ac_zeroshot_gemma2b-it_domain_NaNDA_outputs.csv'
+python general_LLM_inference_rel_extraction_col_type.py --base_model='google/gemma-2b-it' --feat_set='bc' --num_shots=0 --input_data_file='INPUT_NaNDA.csv' --output_data_file='bc_zeroshot_gemma2b-it_domain_NaNDA_outputs.csv'
+
+python general_LLM_inference_rel_extraction_col_type.py --base_model='google/gemma-2b-it' --feat_set='abc' --num_shots=0 --input_data_file='INPUT_NaNDA.csv' --output_data_file='abc_zeroshot_gemma2b-it_domain_NaNDA_outputs.csv'
+
+
+python general_LLM_inference_rel_extraction_col_type.py --base_model='google/gemma-7b-it' --feat_set='a' --num_shots=0 --input_data_file='INPUT_NaNDA.csv' --output_data_file='a_zeroshot_gemma7b-it_domain_NaNDA_outputs.csv'
+python general_LLM_inference_rel_extraction_col_type.py --base_model='google/gemma-7b-it' --feat_set='b' --num_shots=0 --input_data_file='INPUT_NaNDA.csv' --output_data_file='b_zeroshot_gemma7b-it_domain_NaNDA_outputs.csv'
+python general_LLM_inference_rel_extraction_col_type.py --base_model='google/gemma-7b-it' --feat_set='c' --num_shots=0 --input_data_file='INPUT_NaNDA.csv' --output_data_file='c_zeroshot_gemma7b-it_domain_NaNDA_outputs.csv'
+
+python general_LLM_inference_rel_extraction_col_type.py --base_model='google/gemma-7b-it' --feat_set='ab' --num_shots=0 --input_data_file='INPUT_NaNDA.csv' --output_data_file='ab_zeroshot_gemma7b-it_domain_NaNDA_outputs.csv'
+python general_LLM_inference_rel_extraction_col_type.py --base_model='google/gemma-7b-it' --feat_set='ac' --num_shots=0 --input_data_file='INPUT_NaNDA.csv' --output_data_file='ac_zeroshot_gemma7b-it_domain_NaNDA_outputs.csv'
+python general_LLM_inference_rel_extraction_col_type.py --base_model='google/gemma-7b-it' --feat_set='bc' --num_shots=0 --input_data_file='INPUT_NaNDA.csv' --output_data_file='bc_zeroshot_gemma7b-it_domain_NaNDA_outputs.csv'
+
+python general_LLM_inference_rel_extraction_col_type.py --base_model='google/gemma-7b-it' --feat_set='abc' --num_shots=0 --input_data_file='INPUT_NaNDA.csv' --output_data_file='abc_zeroshot_gemma7b-it_domain_NaNDA_outputs.csv'
+
+
+
+% FLAN-T5
+
+python general_LLM_inference_rel_extraction_col_type.py --base_model='google/flan-t5-xl' --feat_set='a' --num_shots=0 --input_data_file='INPUT_NaNDA.csv' --output_data_file='a_zeroshot_flant5xl_domain_NaNDA_outputs.csv'
+python general_LLM_inference_rel_extraction_col_type.py --base_model='google/flan-t5-xl' --feat_set='b' --num_shots=0 --input_data_file='INPUT_NaNDA.csv' --output_data_file='b_zeroshot_flant5xl_domain_NaNDA_outputs.csv'
+python general_LLM_inference_rel_extraction_col_type.py --base_model='google/flan-t5-xl' --feat_set='c' --num_shots=0 --input_data_file='INPUT_NaNDA.csv' --output_data_file='c_zeroshot_flant5xl_domain_NaNDA_outputs.csv'
+
+python general_LLM_inference_rel_extraction_col_type.py --base_model='google/flan-t5-xl' --feat_set='ab' --num_shots=0 --input_data_file='INPUT_NaNDA.csv' --output_data_file='ab_zeroshot_flant5xl_domain_NaNDA_outputs.csv'
+python general_LLM_inference_rel_extraction_col_type.py --base_model='google/flan-t5-xl' --feat_set='ac' --num_shots=0 --input_data_file='INPUT_NaNDA.csv' --output_data_file='ac_zeroshot_flant5xl_domain_NaNDA_outputs.csv'
+python general_LLM_inference_rel_extraction_col_type.py --base_model='google/flan-t5-xl' --feat_set='bc' --num_shots=0 --input_data_file='INPUT_NaNDA.csv' --output_data_file='bc_zeroshot_flant5xl_domain_NaNDA_outputs.csv'
+
+python general_LLM_inference_rel_extraction_col_type.py --base_model='google/flan-t5-xl' --feat_set='abc' --num_shots=0 --input_data_file='INPUT_NaNDA.csv' --output_data_file='abc_zeroshot_flant5xl_domain_NaNDA_outputs.csv'
+
+
+python general_LLM_inference_rel_extraction_col_type.py --base_model='google/flan-t5-xxl' --feat_set='a' --num_shots=0 --input_data_file='INPUT_NaNDA.csv' --output_data_file='a_zeroshot_flant5xxl_domain_NaNDA_outputs.csv'
+python general_LLM_inference_rel_extraction_col_type.py --base_model='google/flan-t5-xxl' --feat_set='b' --num_shots=0 --input_data_file='INPUT_NaNDA.csv' --output_data_file='b_zeroshot_flant5xxl_domain_NaNDA_outputs.csv'
+python general_LLM_inference_rel_extraction_col_type.py --base_model='google/flan-t5-xxl' --feat_set='c' --num_shots=0 --input_data_file='INPUT_NaNDA.csv' --output_data_file='c_zeroshot_flant5xxl_domain_NaNDA_outputs.csv'
+
+python general_LLM_inference_rel_extraction_col_type.py --base_model='google/flan-t5-xxl' --feat_set='ab' --num_shots=0 --input_data_file='INPUT_NaNDA.csv' --output_data_file='ab_zeroshot_flant5xxl_domain_NaNDA_outputs.csv'
+python general_LLM_inference_rel_extraction_col_type.py --base_model='google/flan-t5-xxl' --feat_set='ac' --num_shots=0 --input_data_file='INPUT_NaNDA.csv' --output_data_file='ac_zeroshot_flant5xxl_domain_NaNDA_outputs.csv'
+python general_LLM_inference_rel_extraction_col_type.py --base_model='google/flan-t5-xxl' --feat_set='bc' --num_shots=0 --input_data_file='INPUT_NaNDA.csv' --output_data_file='bc_zeroshot_flant5xxl_domain_NaNDA_outputs.csv'
+
+python general_LLM_inference_rel_extraction_col_type.py --base_model='google/flan-t5-xxl' --feat_set='abc' --num_shots=0 --input_data_file='INPUT_NaNDA.csv' --output_data_file='abc_zeroshot_flant5xxl_domain_NaNDA_outputs.csv'
+
+
+
+
+
+% MISTRAL INSTRUCT: Mistral-7B-Instruct-v0.1, v0.2
+
+
+
+python general_LLM_inference_rel_extraction_col_type.py --base_model='mistralai/Mistral-7B-Instruct-v0.1' --feat_set='a' --num_shots=0 --input_data_file='INPUT_NaNDA.csv' --output_data_file='a_zeroshot_mistral7bv1-instruct_domain_NaNDA_outputs.csv'
+python general_LLM_inference_rel_extraction_col_type.py --base_model='mistralai/Mistral-7B-Instruct-v0.1' --feat_set='b' --num_shots=0 --input_data_file='INPUT_NaNDA.csv' --output_data_file='b_zeroshot_mistral7bv1-instruct_domain_NaNDA_outputs.csv'
+python general_LLM_inference_rel_extraction_col_type.py --base_model='mistralai/Mistral-7B-Instruct-v0.1' --feat_set='c' --num_shots=0 --input_data_file='INPUT_NaNDA.csv' --output_data_file='c_zeroshot_mistral7bv1-instruct_domain_NaNDA_outputs.csv'
+
+python general_LLM_inference_rel_extraction_col_type.py --base_model='mistralai/Mistral-7B-Instruct-v0.1' --feat_set='ab' --num_shots=0 --input_data_file='INPUT_NaNDA.csv' --output_data_file='ab_zeroshot_mistral7bv1-instruct_domain_NaNDA_outputs.csv'
+python general_LLM_inference_rel_extraction_col_type.py --base_model='mistralai/Mistral-7B-Instruct-v0.1' --feat_set='ac' --num_shots=0 --input_data_file='INPUT_NaNDA.csv' --output_data_file='ac_zeroshot_mistral7bv1-instruct_domain_NaNDA_outputs.csv'
+python general_LLM_inference_rel_extraction_col_type.py --base_model='mistralai/Mistral-7B-Instruct-v0.1' --feat_set='bc' --num_shots=0 --input_data_file='INPUT_NaNDA.csv' --output_data_file='bc_zeroshot_mistral7bv1-instruct_domain_NaNDA_outputs.csv'
+
+python general_LLM_inference_rel_extraction_col_type.py --base_model='mistralai/Mistral-7B-Instruct-v0.1' --feat_set='abc' --num_shots=0 --input_data_file='INPUT_NaNDA.csv' --output_data_file='abc_zeroshot_mistral7bv1-instruct_domain_NaNDA_outputs.csv'
+
+
+python general_LLM_inference_rel_extraction_col_type.py --base_model='mistralai/Mistral-7B-Instruct-v0.2' --feat_set='a' --num_shots=0 --input_data_file='INPUT_NaNDA.csv' --output_data_file='a_zeroshot_mistral7bv2-instruct_domain_NaNDA_outputs.csv'
+python general_LLM_inference_rel_extraction_col_type.py --base_model='mistralai/Mistral-7B-Instruct-v0.2' --feat_set='b' --num_shots=0 --input_data_file='INPUT_NaNDA.csv' --output_data_file='b_zeroshot_mistral7bv2-instruct_domain_NaNDA_outputs.csv'
+python general_LLM_inference_rel_extraction_col_type.py --base_model='mistralai/Mistral-7B-Instruct-v0.2' --feat_set='c' --num_shots=0 --input_data_file='INPUT_NaNDA.csv' --output_data_file='c_zeroshot_mistral7bv2-instruct_domain_NaNDA_outputs.csv'
+
+python general_LLM_inference_rel_extraction_col_type.py --base_model='mistralai/Mistral-7B-Instruct-v0.2' --feat_set='ab' --num_shots=0 --input_data_file='INPUT_NaNDA.csv' --output_data_file='ab_zeroshot_mistral7bv2-instruct_domain_NaNDA_outputs.csv'
+python general_LLM_inference_rel_extraction_col_type.py --base_model='mistralai/Mistral-7B-Instruct-v0.2' --feat_set='ac' --num_shots=0 --input_data_file='INPUT_NaNDA.csv' --output_data_file='ac_zeroshot_mistral7bv2-instruct_domain_NaNDA_outputs.csv'
+python general_LLM_inference_rel_extraction_col_type.py --base_model='mistralai/Mistral-7B-Instruct-v0.2' --feat_set='bc' --num_shots=0 --input_data_file='INPUT_NaNDA.csv' --output_data_file='bc_zeroshot_mistral7bv2-instruct_domain_NaNDA_outputs.csv'
+
+python general_LLM_inference_rel_extraction_col_type.py --base_model='mistralai/Mistral-7B-Instruct-v0.2' --feat_set='abc' --num_shots=0 --input_data_file='INPUT_NaNDA.csv' --output_data_file='abc_zeroshot_mistral7bv2-instruct_domain_NaNDA_outputs.csv'
+
+
+
+
