@@ -17,7 +17,7 @@ tqdm==4.65.0
 xgboost==1.7.6
 ```
 
-LLMs to annotate SDOH variables:
+LLMs to annotate SDOH variables (```LLM_SDOH_annotation```):
 ```
 python 3.9
 datasets==2.11.0
