@@ -37,7 +37,7 @@ transformers==4.34.1
 The social determinants of health (SDOH) datasets used in this study can be found below:
 
 |   Dataset | Number of SDOH variables Used |
-|---------------- | -------------- |-------------- | -------------- |
+|---------------- | -------------- |
 | [NaNDA](https://www.icpsr.umich.edu/web/ICPSR/series/1920) |  223  |
 | [AHRQ SDOHD](https://www.ahrq.gov/sdoh/data-analytics/sdoh-data.html) |  506 |
 
