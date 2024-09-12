@@ -392,7 +392,7 @@ def main(args):
 
     #with open(args.input_data_file, "r") as f:
     #    test_data = json.load(f)
-    access_token_read = "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"
+    access_token_read = "TODO: your Huggingface access token here"
     # access_token_write = “xyz”
     login(token = access_token_read)
     # Load dataset
