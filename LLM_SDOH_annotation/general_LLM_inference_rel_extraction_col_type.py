@@ -242,14 +242,15 @@ def convert_to_written_number(number):
     return written_numbers.get(number, "Invalid number")
 
 
+
 def main(args):
-    # if args.flash_attn:
+    #if args.flash_attn:
     #    replace_llama_attn()
 
-    # orig_ctx_len = getattr(config, "max_position_embeddings", None)
+    #orig_ctx_len = getattr(config, "max_position_embeddings", None)
 
     # Set RoPE scaling factor
-    # if orig_ctx_len and args.context_size > orig_ctx_len:
+    #if orig_ctx_len and args.context_size > orig_ctx_len:
     #    scaling_factor = float(math.ceil(args.context_size / orig_ctx_len))
     #    config.rope_scaling = {"type": "linear", "factor": scaling_factor}
 
@@ -267,7 +268,7 @@ def main(args):
     and unfortunately having to include it in each question. Note that we find the models are not always perfect at following instructions, but we are working on improving this!"
     - Discussion: https://huggingface.co/google/gemma-7b/discussions/62
     """
-    if "gemma" in args.base_model:
+    if "gemma" in args.base_model: # Load in full precision
         tokenizer = AutoTokenizer.from_pretrained(
             args.base_model,
             # model_max_length=args.context_size if args.context_size > orig_ctx_len else orig_ctx_len,
@@ -285,7 +286,8 @@ def main(args):
             device_map="auto",
         )
 
-    if "2-70b" in args.base_model:
+
+    if "2-70b" in args.base_model: # **** For Llama-2-70b-chat: Load in 16bit (half) precision
         tokenizer = transformers.AutoTokenizer.from_pretrained(
             args.base_model,
             cache_dir=args.cache_dir,
@@ -304,7 +306,7 @@ def main(args):
         # Resize embeddings:
         # model.resize_token_embeddings(32001)
 
-    elif "llama" in args.base_model:
+    elif "llama" in args.base_model: # Load in full precision
         tokenizer = transformers.AutoTokenizer.from_pretrained(
             args.base_model,
             cache_dir=args.cache_dir,
@@ -314,6 +316,7 @@ def main(args):
             use_fast=False,
         )
 
+        # Load in 16b precision
         model = transformers.AutoModelForCausalLM.from_pretrained(
             args.base_model,
             cache_dir=args.cache_dir,
@@ -323,6 +326,7 @@ def main(args):
         # Resize embeddings:
         # model.resize_token_embeddings(32001)
 
+    # https://www.linkedin.com/pulse/small-overview-demo-o-google-flan-t5-model-balayogi-g/
     if "flan" in args.base_model:
         tokenizer = transformers.AutoTokenizer.from_pretrained(
             args.base_model,
@@ -333,14 +337,15 @@ def main(args):
             use_fast=False,
         )
 
-        model = transformers.T5ForConditionalGeneration.from_pretrained(
+        # Load in 16b precision
+        model = transformers.T5ForConditionalGeneration.from_pretrained( 
             args.base_model,
             cache_dir=args.cache_dir,
             torch_dtype=torch.float16,
             device_map="auto",
         )
 
-    elif "t5" in args.base_model:
+    elif  "t5" in args.base_model:
         tokenizer = transformers.AutoTokenizer.from_pretrained(
             args.base_model,
             cache_dir=args.cache_dir,
@@ -350,8 +355,9 @@ def main(args):
             use_fast=False,
         )
 
+        # Load in 16b precision
         # https://huggingface.co/google-t5/t5-small/discussions/10
-        model = transformers.T5ForConditionalGeneration.from_pretrained(
+        model = transformers.T5ForConditionalGeneration.from_pretrained( 
             args.base_model,
             cache_dir=args.cache_dir,
             torch_dtype=torch.float16,
@@ -359,7 +365,7 @@ def main(args):
         )
 
     # mistralai/Mistral-7B-v0.1
-    if "mistralai" in args.base_model:
+    if  "mistralai" in args.base_model:
         tokenizer = transformers.AutoTokenizer.from_pretrained(
             args.base_model,
             cache_dir=args.cache_dir,
@@ -369,27 +375,31 @@ def main(args):
             use_fast=False,
         )
 
-        model = transformers.AutoModelForCausalLM.from_pretrained(
+        # Load in 16b precision
+        model = transformers.AutoModelForCausalLM.from_pretrained( 
             args.base_model,
             cache_dir=args.cache_dir,
             torch_dtype=torch.float16,
             device_map="auto",
         )
+        
+
+    
 
     model.eval()
     if torch.__version__ >= "2" and sys.platform != "win32":
         model = torch.compile(model)
 
-    # with open(args.input_data_file, "r") as f:
+    #with open(args.input_data_file, "r") as f:
     #    test_data = json.load(f)
-    access_token_read = "TODO: input your HuggingFace access token"
-    login(token=access_token_read)
+    access_token_read = "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"
+    # access_token_write = “xyz”
+    login(token = access_token_read)
     # Load dataset
-    test_data = load_dataset(
-        "anonymous/SDOH_CTA", data_files=args.input_data_file
-    )  # cache_dir=args.cache_dir, AHRQ inputs OLD: INPUT_domain_column_classification
+    test_data = load_dataset("anonymous/SDOH_CTA", data_files=args.input_data_file)  # cache_dir=args.cache_dir, AHRQ inputs OLD: INPUT_domain_column_classification
     # Select all data (stored as 'train' by huggingface dataset object)
-    test_data = test_data["train"]
+    test_data = test_data['train']
+
 
     # import random
     # test_data = random.sample(test_data, k=2)
@@ -398,44 +408,38 @@ def main(args):
     for i in tqdm(range(len(test_data))):
         item = test_data[i]
 
+
         new_item = {}
-        output, raw_output, prompt = build_generator(
-            item,
-            model,
-            tokenizer,
-            temperature=args.temperature,
-            top_p=args.top_p,
-            max_gen_len=args.max_gen_len,
-        )
+        output, raw_output, prompt = build_generator(item, model, tokenizer, temperature=args.temperature, top_p=args.top_p,
+                              max_gen_len=args.max_gen_len)
         # output = respond(item)
 
         new_item["idx"] = i
-        # new_item["table_id"] = test_data[i]["table_id"]
+        #new_item["table_id"] = test_data[i]["table_id"]
         new_item["prompt"] = prompt
 
         new_item["variable_name"] = test_data[i]["variable_name"]
 
         new_item["data_source"] = test_data[i]["data_source"]
 
+
+
         new_item["variable_label"] = test_data[i]["variable_label"]
         new_item["raw_output"] = raw_output
-        new_item["output"] = output  # Parsed for last occurrence of "Domain:"
+        new_item["output"] = output # Parsed for last occurrence of "Domain:"
 
-        if args.task == "topic_CTA":
-            new_item["SDOH_topic"] = test_data[i][
-                "SDOH_topic"
-            ]  # The SDOH topic true label for example i
-        elif args.task == "domain_CTA":
-            new_item["domain"] = test_data[i][
-                "domain"
-            ]  # The domain true label for example i
+        if args.task == 'topic_CTA':
+            new_item["SDOH_topic"] = test_data[i]["SDOH_topic"] # The SDOH topic true label for example i
+        elif args.task == 'domain_CTA':
+            # NOTE: uncomment for 'domain' classification (5 classes)
+            new_item["domain"] = test_data[i]["domain"] # The domain true label for example i
         # new_item["ground_truth"] = test_data[i]["ground_truth"]
         # new_item["output"] = test_data[i]["output"]
 
         test_data_pred.append(new_item)
         # import pdb
-        # pdb.set_trace()
-
+        # pdb.set_trace() 
+    
     # After evaluation, convert to pd df, print to csv:
     final_preds_df = pd.DataFrame(test_data_pred)
 
@@ -445,27 +449,20 @@ def main(args):
     output_fname = ""
     if len(args.output_data_file) == 0:
         shots_str = str(convert_to_written_number(args.num_shots)) + "shot"
-        model_str = args.base_model.split("/", 1)[-1]
-        task_str = (
-            "domain" if args.task == "domain_CTA" else "topic_CTA"
-        )  # Domain or Topic SDOH variable classification.
-        inputfile_str = args.input_data_file.split(".", 1)[0]
-        output_fname = (
-            str(args.feat_set)
-            + shots_str
-            + model_str
-            + task_str
-            + inputfile_str
-            + "outputs.csv"
-        )
-    else:
+        model_str = args.base_model.split('/', 1)[-1]
+        task_str = "domain" if args.task == "domain_CTA" else "topic_CTA" # Domain or Topic SDOH variable classification.
+        inputfile_str = args.input_data_file.split('.', 1)[0]
+        output_fname = str(args.feat_set) + shots_str + model_str + task_str + inputfile_str + "outputs.csv"
+    else: 
         output_fname = args.output_data_file
 
     final_preds_df.to_csv(output_fname, index=False)
     print("------ PREDICTIONS COMPLETED ------")
-
-    # with open(args.output_data_file, "w") as f:
+    
+    #with open(args.output_data_file, "w") as f:
     #    json.dump(test_data_pred, f, indent = 2)
+
+
 
 
 if __name__ == "__main__":
