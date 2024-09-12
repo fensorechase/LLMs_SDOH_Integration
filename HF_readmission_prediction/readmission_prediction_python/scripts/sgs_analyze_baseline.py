@@ -66,7 +66,7 @@ if __name__ == "__main__":
 
 
 """
-OLD PIPE LIST: if you would like to directly averaging fold performances.
+OLD PIPE LIST: if you would like to directly average fold performances.
 We use each of the 10 folds individually for our analysis in order to perform paired t-tests.
 
 
