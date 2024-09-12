@@ -53,7 +53,8 @@ python general_LLM_inference_rel_extraction_col_type.py --base_model='meta-llama
 
 ## 2. Heart Failure (HF) Readmission Prediction
 The patient dataset is unavailable due to privacy reasons --- however the following commands demonstrate the steps we used to train and evaluate binary classification models (using clinical and public SDOH data):
-To train binary classification models on HF 30-day hospital readmission prediction:
+
+To train binary classification models on HF 30-day hospital readmission prediction (in file, choose classification algorithm, features):
 ```
 python bal_allfeats_nosmote_sgs_evaluate_baselines_nestKfold.py
 ```
