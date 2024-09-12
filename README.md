@@ -42,8 +42,25 @@ The social determinants of health (SDOH) datasets used in this study can be foun
 | [AHRQ SDOHD](https://www.ahrq.gov/sdoh/data-analytics/sdoh-data.html) |  506 |
 
 
-## LLM Experiments
+# Reproducibility
+## 1. LLM Experiments
 For zero-shot and 1-shot inference of SDOH Domains for AHRQ and NaNDA variables, please use the commands in `LLM_SDOH_annotation/commands` folder for experiments.
+For example, to perform one round of inference with the following arguments run:
+```
+python general_LLM_inference_rel_extraction_col_type.py --base_model='meta-llama/Llama-2-7b-chat-hf' --feat_set='a' --num_shots=0 --input_data_file='INPUT_AHRQ_tract_2010-2018.csv' --output_data_file='a_zeroshot_llama7b-chat_domain_AHRQ_outputs.csv'
+```
+- **Language model**: Llama-2-7b-chat-hf. **Feature set**: A (SDOH variable name), **Number of shots (inference)**: 0 (i.e., zero-shot), **Input file**: AHRQ variables, **Output file (optional)**: will be automatically named based on other arguments.
+
+## 2. Heart Failure (HF) Readmission Prediction
+The patient dataset is unavailable due to privacy reasons --- however the following commands demonstrate the steps we used to train and evaluate binary classification models (using clinical and public SDOH data):
+To train binary classification models on HF 30-day hospital readmission prediction:
+```
+python bal_allfeats_nosmote_sgs_evaluate_baselines_nestKfold.py
+```
+To analyze results of HF models:
+```
+python sgs_analyze_baseline.py
+```
 
 
 ## All Related Documents: 
