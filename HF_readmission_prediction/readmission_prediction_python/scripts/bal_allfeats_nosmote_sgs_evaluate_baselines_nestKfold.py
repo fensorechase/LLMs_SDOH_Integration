@@ -158,7 +158,7 @@ def main():
 
     parser.add_argument(
         "-subgroup_file",
-        default="../data/subgroup_fast_cols_MLHC.json",
+        default="../data/subgroup_fast_cols.json",
         help="subgroups_to_test",
     )
     parser.add_argument("-endpoint", default="readmit30bin")  # readmit30bin
@@ -184,6 +184,7 @@ def main():
             "AHRQ_TOTAL_tract_no25",
             "AHRQ_TOTAL_tract_and_NANDA_TOTAL_tract_resolved",
             "blad_AHRQ_TOTAL_tract_and_NANDA_TOTAL_tract_resolved",
+            # Additional feature sets we explored can be added using json from the /data/ directory.
         ],
     )
 
